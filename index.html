@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShockClient — услуги</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
     --bg:#0a0a0b;
@@ -235,6 +236,45 @@
     .drifts{min-height:110px}
     .drift.d3{height:90px}
   }
+
+  /* ── Мини-приложение Telegram ── */
+  .tapp{display:none}
+  body.tma .tapp{display:block}
+  .tapp{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px 10px 8px 8px;
+    padding:2px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+    overflow:hidden;position:relative;
+  }
+  .tapp:after{
+    content:"";
+    position:absolute;left:-5%;right:-5%;top:-10px;height:16px;
+    background:var(--snow);
+    border-radius:50% 50% 40% 40% / 100% 100% 0 0;
+    transform:rotate(-1.5deg);
+  }
+  .tapp-inner{position:relative;z-index:1;padding:18px}
+  .tapp h3{margin-bottom:6px}
+  .tapp .hint{color:var(--muted);font-size:13px;margin-bottom:12px}
+  .tapp textarea{
+    width:100%;min-height:110px;
+    background:var(--bg);color:var(--text);
+    border:1px solid var(--line);border-radius:8px;
+    padding:12px;font:inherit;font-size:14px;resize:vertical;
+  }
+  .tapp textarea:focus{outline:2px solid var(--blood);outline-offset:1px}
+  .tapp .tg-note{
+    margin-top:10px;font-size:12px;color:var(--muted);text-align:center;
+  }
+  .tapp .tg-note b{color:var(--blood2)}
+  .tapp .tmsg{
+    margin-top:10px;text-align:center;font-size:14px;color:#7ee08a;
+    display:none;
+  }
+  .tapp .tmsg.show{display:block}
+
 </style>
 </head>
 <body>
@@ -304,6 +344,17 @@
   </div>
 </section>
 
+<!-- Форма заказа (только внутри Telegram Mini App) -->
+<section id="tappOrder" class="tapp">
+  <div class="tapp-inner">
+    <h3>🧩 Оформление заказа</h3>
+    <p class="hint">Опиши, что нужно сделать — заказ сразу уйдёт ShockClient'у.</p>
+    <textarea id="orderField" placeholder="Например: сделай плагин на Paper 1.20 — /vote с наградами за голосование..."></textarea>
+    <p class="tg-note">Заказ отправится прямо в чат бота <b>@shockclient_bot</b></p>
+    <p class="tmsg" id="orderSent">✅ Заказ отправлен! Я отвечу тебе в личке.</p>
+  </div>
+</section>
+
 <section id="contacts" class="contacts">
   <h2>Контакты</h2>
   <div class="contact-list">
@@ -353,6 +404,55 @@
       setTimeout(function(){ el.classList.remove('flash'); }, 900);
     });
   });
+
+  // ── Telegram Mini App ──
+  (function(){
+    var T = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    if (!T) return;
+    document.body.classList.add('tma');
+    try { T.ready(); T.expand(); T.setHeaderColor('#0a0a0b'); T.setBackgroundColor('#0a0a0b'); } catch(e){}
+    try { T.enableClosingConfirmation(); } catch(e){}
+
+    try {
+      T.MainButton.setParams({
+        text: '📨 Отправить заказ',
+        color: '#a3061b',
+        text_color: '#ffffff',
+        is_visible: true
+      });
+    } catch(e){}
+    function orderText(){
+      return (document.getElementById('orderField').value || '').trim();
+    }
+    try {
+      T.MainButton.onClick(function(){
+        var text = orderText();
+        if (text.length < 10) {
+          try {
+            T.showPopup({ type: 'default', title: 'Слишком коротко', message: 'Пожалуйста, опиши задачу подробнее (минимум 10 символов).' });
+          } catch(e){}
+          return;
+        }
+        var payload = { type: 'order', text: text };
+        try {
+          var user = T.initDataUnsafe && T.initDataUnsafe.user;
+          if (user) { payload.user = { id: user.id, name: user.first_name, username: user.username }; }
+        } catch(e){}
+        T.sendData(JSON.stringify(payload));
+        document.getElementById('orderSent').classList.add('show');
+        document.getElementById('orderField').value = '';
+      });
+    } catch(e){}
+
+    document.getElementById('orderField').addEventListener('input', function(){
+      try {
+        if (orderText().length >= 10) {
+          T.MainButton.setText && T.MainButton.setText('📨 Отправить заказ');
+        }
+      } catch(e){}
+    });
+  })();
+
 </script>
 
 </body>
