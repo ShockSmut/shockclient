@@ -14,6 +14,7 @@
     --text:#e6e6e6;
     --muted:#8a8a8f;
     --line:#26262b;
+    --snow:#f2f6fb;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -22,12 +23,30 @@
     color:var(--text);
     font-family:"Segoe UI",Arial,sans-serif;
     line-height:1.6;
+    overflow-x:hidden;
   }
   a{color:inherit;text-decoration:none}
 
+  /* ── Снегопад ── */
+  .snowfield{
+    position:fixed;inset:0;z-index:50;
+    pointer-events:none;overflow:hidden;
+  }
+  .flake{
+    position:absolute;top:-3vh;
+    color:var(--snow);
+    user-select:none;
+    animation:fall linear infinite;
+    opacity:.75;
+  }
+  @keyframes fall{
+    0%   {transform:translate(0,-3vh) rotate(0deg)}
+    100% {transform:translate(var(--dx,0px),103vh) rotate(360deg)}
+  }
+
   /* ── Шапка ── */
   header{
-    position:sticky;top:0;z-index:10;
+    position:sticky;top:0;z-index:60;
     background:rgba(10,10,11,.92);
     border-bottom:1px solid var(--line);
     backdrop-filter:blur(6px);
@@ -38,9 +57,7 @@
   }
   .logo{font-weight:800;font-size:20px;letter-spacing:.5px}
   .logo span{color:var(--blood2)}
-  .nav nav a{
-    margin-left:22px;font-size:14px;color:var(--muted);
-  }
+  .nav nav a{margin-left:22px;font-size:14px;color:var(--muted)}
   .nav nav a:hover{color:var(--text)}
 
   /* ── Хиро ── */
@@ -52,20 +69,17 @@
       var(--bg);
     border-bottom:1px solid var(--line);
   }
-  .hero h1{
-    font-size:42px;font-weight:800;line-height:1.2;
-  }
+  .hero h1{font-size:42px;font-weight:800;line-height:1.2}
   .hero h1 em{color:var(--blood2);font-style:normal}
-  .hero p{
-    color:var(--muted);max-width:520px;margin:16px auto 32px;
-  }
+  .hero p{color:var(--muted);max-width:520px;margin:16px auto 32px}
   .btn{
+    position:relative;
     display:inline-block;
     background:var(--blood);color:#fff;
     padding:12px 32px;border-radius:6px;
     font-weight:700;font-size:15px;
     border:1px solid var(--blood2);
-    transition:background .2s;
+    transition:background .2s, box-shadow .2s;
   }
   .btn:hover{background:var(--blood2)}
 
@@ -95,49 +109,137 @@
   .card .price{
     margin-top:16px;font-weight:800;font-size:20px;color:var(--blood2);
   }
-  .card .order{
-    margin-top:14px;text-align:center;
+
+  /* ── Кнопка «Заказать» с сугробом ── */
+  .order{
+    position:relative;
+    margin-top:14px;
+    text-align:center;
     border:1px solid var(--line);border-radius:6px;
-    padding:9px;font-size:14px;color:var(--muted);
+    padding:9px 9px 12px;
+    font-size:14px;color:var(--muted);
+    overflow:hidden;
+    cursor:pointer;
     transition:all .2s;
+    animation:driftIdle 4s ease-in-out infinite;
   }
-  .card .order:hover{
+  /* снежная шапка — сугроб, налипающий сверху */
+  .order::before{
+    content:"";
+    position:absolute;
+    left:-10%;right:-10%;
+    top:-16px;height:14px;
+    background:var(--snow);
+    border-radius:50% 50% 40% 40% / 100% 100% 0 0;
+    filter:blur(.5px);
+    transform:translateY(-20px) rotate(-2deg);
+    transition:transform .45s cubic-bezier(.34,1.4,.64,1);
+    pointer-events:none;
+  }
+  /* маленькие сугробы по нижним углам */
+  .order::after{
+    content:"";
+    position:absolute;
+    bottom:-6px;left:-8%;width:45%;height:12px;
+    background:var(--snow);
+    opacity:.28;
+    border-radius:60% 40% 0 0 / 100% 100% 0 0;
+    transform:translateX(-6px) rotate(-3deg);
+    transition:opacity .45s;
+    pointer-events:none;
+  }
+  .order:hover{
     border-color:var(--blood2);color:#fff;background:var(--blood);
+  }
+  .order:hover::before{transform:translateY(0) rotate(0deg)}
+  .order:hover::after{opacity:.45}
+  /* лёгкая «оседающая» анимация сугроба в покое */
+  @keyframes driftIdle{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-3px)}
+  }
+  /* красный контур при клике */
+  .order.flash,
+  .btn.flash,
+  .contact-list a.flash{
+    box-shadow:0 0 0 3px rgba(217,16,40,.65), 0 0 18px rgba(217,16,40,.45);
+    border-color:var(--blood2) !important;
+    animation:flashPulse .7s ease-out;
+  }
+  @keyframes flashPulse{
+    0%  {box-shadow:0 0 0 1px rgba(217,16,40,.9), 0 0 4px rgba(217,16,40,.7)}
+    100%{box-shadow:0 0 0 3px rgba(217,16,40,.65), 0 0 18px rgba(217,16,40,.45)}
   }
 
   /* ── Как заказать ── */
   .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
   .step{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px}
-  .step b{
-    display:block;color:var(--blood2);font-size:26px;margin-bottom:8px;
-  }
+  .step b{display:block;color:var(--blood2);font-size:26px;margin-bottom:8px}
   .step p{color:var(--muted);font-size:14px}
 
   /* ── Контакты ── */
-  .contacts{
-    background:var(--bg2);
-    border-top:1px solid var(--line);
-  }
+  .contacts{background:var(--bg2);border-top:1px solid var(--line)}
   .contact-list{display:flex;flex-wrap:wrap;gap:14px}
   .contact-list a{
     background:var(--panel);border:1px solid var(--line);
     border-radius:8px;padding:14px 22px;font-size:15px;
     transition:border-color .2s;
+    cursor:pointer;
   }
   .contact-list a:hover{border-color:var(--blood2)}
 
+  /* ── Сугробы внизу ── */
+  .drifts{
+    position:relative;
+    margin-top:40px;
+    width:100%;
+    min-height:150px;
+    pointer-events:none;
+  }
+  .drift{
+    position:absolute;bottom:-8px;
+    background:var(--snow);
+    border-radius:150px 150px 0 0;
+  }
+  .drift.d1{left:-4%;  width:60%; height:90px;  opacity:.98}
+  .drift.d2{right:-6%; width:70%; height:70px;  opacity:.9;  filter:brightness(.93)}
+  .drift.d3{left:16%;  width:55%; height:120px; opacity:.95; filter:brightness(.97)}
+  .drift.d4{left:-8%;  width:34%; height:60px;  opacity:.85; filter:brightness(.88)}
+  .drift.d5{right:2%;  width:26%; height:55px;  opacity:.8;  filter:brightness(.85)}
+  /* лёгкое «поддувание» сугробов */
+  .drift{animation:sway 7s ease-in-out infinite}
+  .drift.d1{animation-duration:9s}
+  .drift.d2{animation-duration:11s}
+  .drift.d3{animation-duration:8s}
+  @keyframes sway{
+    0%,100%{transform:scaleY(1) translateY(0)}
+    50%{transform:scaleY(1.05) translateY(-4px)}
+  }
+
   footer{
-    border-top:1px solid var(--line);
-    text-align:center;padding:24px;color:var(--muted);font-size:13px;
+    position:relative;
+    height:64px;
+    background:var(--snow);
+    text-align:center;
+    padding:20px;
+    font-size:15px;
+    font-weight:700;
+    color:#5a0a14;
+    letter-spacing:1px;
+    text-transform:uppercase;
   }
 
   @media (max-width:560px){
     .hero h1{font-size:30px}
     .nav nav{display:none}
+    .drifts{min-height:110px}
+    .drift.d3{height:90px}
   }
 </style>
 </head>
 <body>
+
+<div class="snowfield" id="snowfield"></div>
 
 <header>
   <div class="nav">
@@ -152,7 +254,7 @@
 
 <div class="hero">
   <h1>Shock<em>Client</em><br>Плагины и услуги для Minecraft</h1>
-  <p>Напишу плагин под твой сервер, наструю ядро или сделаю конфиг. Быстро, чисто и без лишней воды.</p>
+  <p>Напишу плагин под твой сервер, наструю ядро или сделаю конфиг.<br>Быстро, чисто и без лишней воды.</p>
   <a class="btn" href="#services">Смотреть услуги</a>
 </div>
 
@@ -184,12 +286,6 @@
       <a class="order" href="#contacts">Заказать</a>
     </div>
     <div class="card">
-      <h3>Скины / ресурспаки</h3>
-      <p>Мелкие работы с ресурспаками и кастомными текстурами под клиент или сервер.</p>
-      <div class="price">от 200 ₽</div>
-      <a class="order" href="#contacts">Заказать</a>
-    </div>
-    <div class="card">
       <h3>Другое</h3>
       <p>Есть нестандартная задача? Напиши — обсудим срок и цену индивидуально.</p>
       <div class="price">договорная</div>
@@ -216,9 +312,48 @@
   </div>
 </section>
 
+<!-- Большие сугробы внизу -->
+<div class="drifts">
+  <div class="drift d4"></div>
+  <div class="drift d5"></div>
+  <div class="drift d2"></div>
+  <div class="drift d1"></div>
+  <div class="drift d3"></div>
+</div>
+
 <footer>
-  ShockClient © 2026 — все работы выполнимы, всё обсуждается.
+  ❄ Защищено крутыми пациками ❄
 </footer>
+
+<script>
+  // ── Снежинки ──
+  (function(){
+    var field = document.getElementById('snowfield');
+    var flakes = 60;
+    for (var i = 0; i < flakes; i++) {
+      var f = document.createElement('div');
+      f.className = 'flake';
+      f.textContent = '❄';
+      var size = 8 + Math.random() * 14;           // размеры 8–22px
+      var dur  = 14 + Math.random() * 18;          // падение 14–32 сек — медленно
+      f.style.left = Math.random() * 100 + 'vw';
+      f.style.fontSize = size + 'px';
+      f.style.animationDuration = dur + 's';
+      f.style.animationDelay = -Math.random() * dur + 's';
+      f.style.opacity = .25 + Math.random() * .55;
+      f.style.setProperty('--dx', (Math.random() * 240 - 120) + 'px');
+      field.appendChild(f);
+    }
+  })();
+
+  // ── Красный контур при клике ──
+  document.querySelectorAll('.btn, .order, .contact-list a').forEach(function(el){
+    el.addEventListener('click', function(){
+      el.classList.add('flash');
+      setTimeout(function(){ el.classList.remove('flash'); }, 900);
+    });
+  });
+</script>
 
 </body>
 </html>
